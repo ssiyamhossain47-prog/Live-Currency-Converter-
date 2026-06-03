@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Live Currency Converter</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<style>
+
+:root{
+    --bg:#0f172a;
+    --card:#1e293b;
+    --text:#ffffff;
+    --input:#334155;
+    --button:#3b82f6;
+    --result:#0ea5e9;
+}
+
+.light-mode{
+    --bg:#f1f5f9;
+    --card:#ffffff;
+    --text:#0f172a;
+    --input:#e2e8f0;
+    --button:#2563eb;
+    --result:#0284c7;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    transition:0.3s;
+}
+
+.container{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 0 20px rgba(0,0,0,0.3);
+    position:relative;
+}
+
+.theme-btn{
+    position:absolute;
+    top:15px;
+    right:15px;
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:none;
+    background:var(--button);
+    color:white;
+    font-size:18px;
+    cursor:pointer;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+    font-size:28px;
+}
+
+.box{
+    margin-bottom:15px;
+}
+
+label{
+    display:block;
+    margin-bottom:8px;
+    font-size:15px;
+}
+
+input,
+select{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:var(--input);
+    color:var(--text);
+    font-size:16px;
+    outline:none;
+}
+
+button.convert-btn{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:var(--button);
+    color:white;
+    font-size:18px;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+button.convert-btn:hover{
+    opacity:0.9;
+}
+
+.result{
+    margin-top:20px;
+    background:var(--result);
+    padding:18px;
+    border-radius:14px;
+    text-align:center;
+    color:white;
+}
+
+.rate{
+    margin-top:8px;
+    font-size:14px;
+}
+
+.loading{
+    text-align:center;
+    margin-top:10px;
+    font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <button class="theme-btn" onclick="toggleTheme()">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <h1>Live Currency</h1>
+
+    <div class="box">
+        <label>Enter Amount</label>
+        <input type="number" id="amount" placeholder="Enter Amount">
+    </div>
+
+    <div class="box">
+        <label>From</label>
+        <select id="fromCurrency"></select>
+    </div>
+
+    <div class="box">
+        <label>To</label>
+        <select id="toCurrency"></select>
+    </div>
+
+    <button class="convert-btn" onclick="convertCurrency()">
+        Convert Now
+    </button>
+
+    <div class="loading" id="loading"></div>
+
+    <div class="result" id="result">
+        Live Result Here
+    </div>
+
+</div>
+
+<script>
+
+const fromCurrency = document.getElementById("fromCurrency");
+const toCurrency = document.getElementById("toCurrency");
+
+const currencyList = [
+"USD","BDT","INR","PKR","EUR","GBP","JPY","CNY","AUD","CAD",
+"SGD","MYR","SAR","AED","QAR","KWD","THB","KRW","RUB","TRY",
+"ZAR","BRL","MXN","IDR","NGN","CHF","SEK","NOK","DKK","PLN",
+"HKD","NZD","LKR","NPR","AFN","IRR","IQD","OMR","BHD","MAD"
+];
+
+currencyList.forEach(currency => {
+
+    let option1 = document.createElement("option");
+    option1.value = currency;
+    option1.text = currency;
+
+    let option2 = document.createElement("option");
+    option2.value = currency;
+    option2.text = currency;
+
+    fromCurrency.appendChild(option1);
+    toCurrency.appendChild(option2);
+});
+
+fromCurrency.value = "USD";
+toCurrency.value = "BDT";
+
+async function convertCurrency(){
+
+    const amount = document.getElementById("amount").value;
+
+    const from = fromCurrency.value;
+
+    const to = toCurrency.value;
+
+    const result = document.getElementById("result");
+
+    const loading = document.getElementById("loading");
+
+    if(amount == ""){
+        alert("Enter amount");
+        return;
+    }
+
+    loading.innerHTML = "Loading Live Rate...";
+
+    try{
+
+        const response = await fetch(
+        `https://api.exchangerate-api.com/v4/latest/${from}`
+        );
+
+        const data = await response.json();
+
+        const rate = data.rates[to];
+
+        const finalAmount = amount * rate;
+
+        result.innerHTML = `
+            <h2>${amount} ${from}</h2>
+            <h3>=</h3>
+            <h1>${finalAmount.toFixed(2)} ${to}</h1>
+            <div class="rate">
+                1 ${from} = ${rate} ${to}
+            </div>
+        `;
+
+        loading.innerHTML = "";
+
+    }catch(error){
+
+        loading.innerHTML = "";
+
+        result.innerHTML = "Failed To Load Live Currency";
+    }
+}
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light-mode");
+
+    const icon = document.querySelector(".theme-btn i");
+
+    if(document.body.classList.contains("light-mode")){
+        icon.classList.remove("fa-moon");
+        icon.classList.add("fa-sun");
+    }else{
+        icon.classList.remove("fa-sun");
+        icon.classList.add("fa-moon");
+    }
+}
+
+</script>
+
+</body>
+</html>
